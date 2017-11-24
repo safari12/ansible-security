@@ -1,0 +1,80 @@
+- name: turn off automatic package updates
+  lineinfile:
+    path: /etc/apt/apt.conf.d/10periodic
+    state: present
+    regexp: '^APT::Periodic::Update-Package-Lists\s'
+    line: 'APT::Periodic::Update-Package-Lists "0";'
+
+- name: turn off unattended upgrades
+  lineinfile:
+    path: /etc/apt/apt.conf.d/10periodic
+    state: present
+    regexp: '^APT::Periodic::Unattended-Upgrade\s'
+    line: 'APT::Periodic::Unattended-Upgrade "0";'
+
+- name: remove dependencies that are no longer required
+  apt:
+    autoremove: yes
+
+- name: update packages
+  apt:
+    update_cache: yes
+
+- name: change admin group in sudoers to use no password
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%admin\s'
+    line: '%admin ALL=(ALL) NOPASSWD:ALL'
+
+- name: add admin group to system
+  group:
+    name: admin
+    state: present
+
+- name: add admin group to user
+  user: 
+    name: "{{ansible_user}}"
+    group: admin
+    append: yes
+
+- name: remove sudo group from user
+  command: "deluser {{ansible_user}} sudo"
+  ignore_errors: yes
+
+- name: add public ssh key
+  authorized_key:
+    user: "{{ansible_user}}"
+    state: present
+    key: "{{ lookup('file', ansible_ssh_public_key_file) }}"
+
+- name: disable challenge response authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^ChallengeResponseAuthentication\s'
+    line: 'ChallengeResponseAuthentication no'
+
+- name: disable password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^PasswordAuthentication\s'
+    line: 'PasswordAuthentication no'
+
+- name: disable usepam
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^UsePAM\s'
+    line: 'UsePAM no'
+
+- name: disable root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^PermitRootLogin\s'
+    line: 'PermitRootLogin no'
+
+- name: reset ssh server
+  command: systemctl reload ssh
