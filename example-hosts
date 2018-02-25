@@ -1,5 +1,7 @@
-[all]
+[all:vars]
+ansible_connection=ssh
 ansible_user = <put ssh user here>
 ansible_ssh_private_key_file = <put path to privete key file here>
 
+[all]
 example.com

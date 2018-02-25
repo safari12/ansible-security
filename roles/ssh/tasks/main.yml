@@ -35,7 +35,7 @@
 - name: add admin group to user
   user: 
     name: "{{ansible_user}}"
-    group: admin
+    groups: admin
     append: yes
 
 - name: remove sudo group from user
